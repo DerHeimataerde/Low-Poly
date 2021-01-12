@@ -1,7 +1,7 @@
 # L4D2-LOD-GEN
 Recursively decimate l4d2 models
 
-Credit to:
+#Credit to:
 
 https://github.com/Artfunkel/BlenderSourceTools
 
@@ -9,9 +9,9 @@ https://github.com/ZeqMacaw/Crowbar
 
 https://github.com/UltraTechX/Crowbar-Command-Line
 
-Usage:
+#Usage:
 
-  lp.py '\path\to\models\directory\to\decimate' decimate-ratio-as-float '\path\to\studiomdl.exe\'
+  '''lp.py '\path\to\models\directory\to\decimate' decimate-ratio-as-float '\path\to\studiomdl.exe\''''
 
 ..Decimation ratio MUST be from 0 to 1 as a float
 
