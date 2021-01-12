@@ -10,6 +10,7 @@ https://github.com/ZeqMacaw/Crowbar
 https://github.com/UltraTechX/Crowbar-Command-Line
 
 Usage:
+
   lp.py '\path\to\models\directory\to\decimate' decimate-ratio-as-float '\path\to\studiomdl.exe\'
 
 ..Decimation ratio MUST be from 0 to 1 as a float
