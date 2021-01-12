@@ -3,7 +3,9 @@ Recursively decimate l4d2 models
 
 Credit to:
 https://github.com/Artfunkel/BlenderSourceTools
+
 https://github.com/ZeqMacaw/Crowbar
+
 https://github.com/UltraTechX/Crowbar-Command-Line
 
 Usage:
