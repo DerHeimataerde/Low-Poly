@@ -1,5 +1,6 @@
-# L4D2-LOD-GEN
+# Low Poly (L4D2-LOD-GEN)
 Recursively decimate l4d2 models
+(Can be reworked to use any source engine game, probably)
 
 ## Usage:
 
