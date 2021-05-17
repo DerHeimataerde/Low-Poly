@@ -5,6 +5,15 @@ import bpy
 import glob
 import traceback
 import subprocess
+from progress.bar import Bar
+import contextlib
+import fileinput
+
+def replaceAll(file,searchExp,replaceExp):
+    for line in fileinput.input(file, inplace=1):
+        if searchExp in line:
+            line = line.replace(searchExp,replaceExp)
+        sys.stdout.write(line)
 
 if len(sys.argv) > 1:
     root_dir = sys.argv[1]
@@ -28,21 +37,47 @@ else:
 if (root_dir[-1] != "\\"):
     root_dir = root_dir+"\\"
 
+verbose = False
+if ("-v" in sys.argv):
+    verbose = True
+    
 bstpath = os.path.dirname(os.path.realpath(__file__))+"\\blender_source_tools_3.1.0.zip"
 
+#Decompiling files
+filecount=0
+countedfiles= []
+for filename in glob.iglob(root_dir + '**/**', recursive=True):
+    if (filename.endswith('.mdl') and (not (filename in countedfiles)) and (not ('anim' in filename)) and (not ('break' in filename))):
+        filecount += 1
+        countedfiles.append(filename)
+bar = Bar('Decompiling', max=(filecount))
+print()
+
+editedfiles = []
 for filename in glob.iglob(root_dir + '**/**', recursive=True):
     try:
-        if os.path.isfile(filename):
-            if (filename.endswith('.mdl') and (not ('anim' in filename))):
+        if (os.path.isfile(filename) and (not (filename in editedfiles))):
+            if (filename.endswith('.mdl') and (not ('anim' in filename)) and (not ('break' in filename))):
                 filepath = "\\".join(filename.split("\\")[0:-1])
+                print("DECOMPILING: "+filename)
                 args = ["CrowbarCommandLineDecomp.exe", "-p", filename, "-o", filepath]
-                subprocess.run(args)
+                if verbose:
+                    subprocess.run(args)
+                else:
+                    subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                editedfiles.append(filename)
+                print()
+                bar.next()
+                print()
     except:
         print(str(filename)+": ERROR")
         traceback.print_exc()
         input("Press Enter to continue...")
         continue
+bar.finish()
+
 '''
+#Removing extra/previous files.
 for filename in glob.iglob(root_dir + '**/**', recursive=True):
     try:
         if os.path.isfile(filename):
@@ -55,14 +90,32 @@ for filename in glob.iglob(root_dir + '**/**', recursive=True):
         input("Press Enter to continue...")
         continue
 '''
+#Decimating models using blender python module
+
+filecount=0
+countedfiles = []
+for filename in glob.iglob(root_dir + '**/**', recursive=True):
+    if (filename.endswith('.smd') and (not (filename in countedfiles)) and (not ('phys' in filename)) and (not filename.endswith('idle.smd')) and (not ('anim' in filename))):
+        filecount += 1
+        countedfiles.append(filename)
+bar = Bar('Decimating', max=(filecount))
+print()
+
 editedfiles = []
 
 for filename in glob.iglob(root_dir + '**/**', recursive=True):
     try:
-        if os.path.isfile(filename):
+        if (os.path.isfile(filename) and (not (filename in editedfiles))):
             if (filename.endswith('.smd') and (not filename.endswith('physics.smd')) and (not filename.endswith('idle.smd'))
-             and (not ('anim' in filename)) and (not ('_OLD' in filename)) and (not (filename in editedfiles))):
-                print("PROCESSING: "+filename)
+             and (not ('anim' in filename)) and (not ('_OLD' in filename))):
+                print("DECIMATING: "+filename)
+
+                old_target = sys.stdout
+                old_err = sys.stderr
+                if not verbose:
+                    sys.stdout = open(os.devnull, 'w')
+                    sys.stderr = open(os.devnull, 'w')
+
                 filedir = os.path.dirname(filename)
                 bpy.ops.wm.read_factory_settings()
                 bpy.ops.preferences.addon_install(filepath=bstpath)
@@ -96,21 +149,79 @@ for filename in glob.iglob(root_dir + '**/**', recursive=True):
                 bpy.ops.export_scene.smd()
                 editedfiles.append(filename)
                 #print("EDITED FILES: "+str(editedfiles))
+
+                sys.stdout = old_target
+                sys.stderr = old_err
+                print()
+                bar.next()
+                print()
     except:
         print(str(filename)+": ERROR")
         traceback.print_exc()
         input("Press Enter to continue...")
         continue
+bar.finish()
+'''
+#Removing hand kinematics (fixes hand animations)
+filecount=0
+countedfiles = []
+for filename in glob.iglob(root_dir + '**/**', recursive=True):
+    if (filename.endswith('.qc') and (not (filename in countedfiles))):
+        filecount += 1 
+        countedfiles.append(filename)
+bar = Bar('Reconfiguring', max=(filecount))
+print()
 
+editedfiles = []
 for filename in glob.iglob(root_dir + '**/**', recursive=True):
     try:
         if os.path.isfile(filename):
-            if filename.endswith('.qc'):
-                print("CONVERTING: "+filename)
-                args = [eng_path, "-game", game_path, "-nop4", "-verbose", "-nox360", filename]
-                subprocess.run(args)
+            if (filename.endswith('.qc') and (not (filename in editedfiles))):
+                print("Reconfiguring: "+filename)
+                replaceAll(filename,"ikrule","//ikrule")
+                editedfiles.append(filename)
+                print()
+                bar.next()
+                print()
 
     except:
         traceback.print_exc()
         input("Press Enter to continue...")
         continue
+bar.finish()
+'''
+
+input("Press Enter to Compile")
+#Compiling models
+
+filecount=0
+countedfiles = []
+for filename in glob.iglob(root_dir + '**/**', recursive=True):
+    if (filename.endswith('.qc') and (not (filename in countedfiles))):
+        filecount += 1 
+        countedfiles.append(filename)
+bar = Bar('Compiling', max=(filecount))
+print()
+
+editedfiles = []
+for filename in glob.iglob(root_dir + '**/**', recursive=True):
+    try:
+        if os.path.isfile(filename):
+            if (filename.endswith('.qc') and (not (filename in editedfiles))):
+                print("COMPILING: "+filename)
+                args = [eng_path, "-game", game_path, "-nop4", "-verbose", "-nox360", filename]
+                if verbose:
+                    subprocess.run(args)
+                else:
+                    subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                editedfiles.append(filename)
+                print()
+                bar.next()
+                print()
+
+    except:
+        traceback.print_exc()
+        input("Press Enter to continue...")
+        continue
+bar.finish()
+print("Finished processing.")
